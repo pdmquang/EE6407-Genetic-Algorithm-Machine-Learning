@@ -7,4 +7,5 @@ rng(1); % For reproducibility
 NaiveBayes_CVMdl = crossval(NaiveBayes_Mdl);
 NaiveBayes_Loss = kfoldLoss(NaiveBayes_CVMdl);
 
-disp('job done');
+NaiveBayes_Avg_Accuracy = 1 - NaiveBayes_Loss; % Accuracy is 1 minus the classification error
+disp(['Accuracy: ', num2str(NaiveBayes_Avg_Accuracy)]);

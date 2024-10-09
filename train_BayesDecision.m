@@ -32,34 +32,41 @@ function predictedClass = bayesDecisionRule(X, numClasses, Mu, Sigma, Prior)
     predictedClass = mode(predictedClassByFeature);
 end
 
-numClasses = 2;
-
 % Test classification on a new data point
-[Mu, Sigma, Prior] = BayesDecision_Parameters(X, y);
-predictedClass = bayesDecisionRule(X(4, :), numClasses, Mu, Sigma, Prior);
-disp(['Predicted class: ', num2str(predictedClass) ]);
+% [Mu, Sigma, Prior] = BayesDecision_Parameters(X, y);
+% predictedClass = bayesDecisionRule(X(4, :), numClasses, Mu, Sigma, Prior);
+% disp(['Predicted class: ', num2str(predictedClass) ]);
 
-% rng(1);
-% cv = cvpartition(y, 'KFold', 10);
-% accuracies = zeros(cv.NumTestSets, 1);
-% 
-% for i = 1:cv.NumTestSets
-%     % Get train and test indices
-%     trainIdx = cv.training(i);
-%     testIdx = cv.test(i);
-% 
-%     % Prepare training and test data
-%     X_train = X(trainIdx, :);
-%     y_train = y(trainIdx);
-% 
-%     X_test = X(testIdx, :);
-%     y_test = y(testIdx);
-% 
-%     [Mu, Sigma, Prior] = BayesDecision_Parameters(X_train, y_train);
-%     predictedClass = bayesDecisionRule(X_test, y_test, Mu, Sigma, Prior);
-% 
-%     true_classes = unique(Y_train);
-%     % Calculate accuracy for this fold
-%     accuracies(i) = sum(find(Y_test, true_classes(predictedClass))) / length(Y_test);
-% 
-% end
+numClasses = length(unique(y));
+
+rng(1);
+cv = cvpartition(y, 'KFold', 10, 'Stratify', true);
+accuracies = zeros(cv.NumTestSets, 1);
+
+for i = 1:cv.NumTestSets
+    % Get train and test indices
+    trainIdx = cv.training(i);
+    testIdx = cv.test(i);
+
+    % Prepare training and test data
+    X_train = X(trainIdx, :);
+    y_train = y(trainIdx);
+
+    X_test = X(testIdx, :);
+    y_test = y(testIdx);
+
+    [Mu, Sigma, Prior] = BayesDecision_Parameters(X_train, y_train);
+    
+    y_predicted = zeros(numel(y_test),1);
+    for j = 1:length(y_test)
+        predictedClass = bayesDecisionRule(X_test(j, :), numClasses, Mu, Sigma, Prior);
+        y_predicted(j) = predictedClass;
+    end
+    
+    % Calculate accuracy for this fold
+    predictions = y_test == y_predicted;
+    accuracies(i) = sum(predictions) / numel(predictions);
+end
+
+BayesDecision_Avg_Accuracy = mean(accuracies);
+disp(['Accuracy: ', num2str(BayesDecision_Avg_Accuracy)]);
